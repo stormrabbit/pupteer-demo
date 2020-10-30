@@ -1,5 +1,7 @@
 const puppeteer = require('puppeteer');
-const {fsTools} = require('eschew-materials');
+const {
+    fsTools
+} = require('eschew-materials');
 const getArrsInnerText = (arrs) => {
     let str = '';
     for (let index = 0; index < arrs.length; index++) {
@@ -18,9 +20,26 @@ const getUrlByIndex = (index) => `https://www.3dmgame.com/gl/3781708${index === 
 
     const getResult = async (index) => {
         await page.goto(getUrlByIndex(index));
+        // page.on('console', msg => {
+        //     console.log(msg.text())
+        // })
+        // await page.evaluate(() => {
+        //     const getArrsInnerText = (arrs) => {
+        //         let str = '';
+        //         for (let idx = 0; idx < arrs.length; idx++) {
+        //             const targetText = arrs.item(idx).innerText;
+        //             str += `${targetText}\n`
+        //         }
+        //         return str;
+        //     }
+        //     const ps = document.getElementsByClassName('news_warp_center')[0].getElementsByTagName('p');
+        //     const pageStr = getArrsInnerText(ps);
+        //     console.log(pageStr);
+        // })
         page.on('request', async req => {
-            const target = req._postData;
+            const target = (req._postData + '').replace(/url.*=/g, '');
             if(!result.includes(target) && !!target) {
+                console.log(target);
                 result += target;
             }
         } )
@@ -30,9 +49,10 @@ const getUrlByIndex = (index) => `https://www.3dmgame.com/gl/3781708${index === 
 
             const getArrsInnerText = (arrs) => {
                 let str = '';
-                for (let index = 0; index < arrs.length; index++) {
-                    if(!arrs.item(index).innerText) {
-                        str += `${arrs.item(index).innerText}\n`
+                for (let idx = 0; idx < arrs.length; idx++) {
+                    const targetText = arrs.item(idx).innerText;
+                    if(!!targetText) {
+                        str += `${targetText}\n`
                     }
                 }
                 return str;
@@ -61,11 +81,10 @@ const getUrlByIndex = (index) => `https://www.3dmgame.com/gl/3781708${index === 
             request.send(`${pageStr}`);
         });
     }
-   
+    // await getResult(1)
     for (let index = 1; index < 80; index++) {
         await getResult(index)
     }
-    // console.log(result);
     await fsTools.writeFilePlus('test.txt', result);
     await browser.close();
 })();
